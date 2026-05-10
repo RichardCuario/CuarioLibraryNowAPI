@@ -6,10 +6,11 @@ ENV ASPNETCORE_URLS=http://+:8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# We use the full path because the Build Context is the root of the repo
+# Copy only the project file first to cache layers
 COPY ["CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj", "CuarioLibraryNowAPI/"]
 RUN dotnet restore "CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj"
 
+# Copy the rest of the code
 COPY . .
 WORKDIR "/src/CuarioLibraryNowAPI"
 RUN dotnet build "CuarioLibraryNowAPI.csproj" -c Release -o /app/build

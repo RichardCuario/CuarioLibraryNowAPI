@@ -1,24 +1,37 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
+
 ENV ASPNETCORE_URLS=http://+:8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy only the project file first to cache layers
-COPY ["CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj", "CuarioLibraryNowAPI/"]
-RUN dotnet restore "CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj"
+# Copy project file first for caching
+COPY ["CuarioLibraryNowAPI/Properties/CuarioLibraryNowAPI.csproj", "CuarioLibraryNowAPI/Properties/"]
 
-# Copy the rest of the code
+# Restore dependencies
+RUN dotnet restore "CuarioLibraryNowAPI/Properties/CuarioLibraryNowAPI.csproj"
+
+# Copy all source files
 COPY . .
+
+# Move to project directory
 WORKDIR "/src/CuarioLibraryNowAPI"
-RUN dotnet build "CuarioLibraryNowAPI.csproj" -c Release -o /app/build
+
+# Build the project
+RUN dotnet build "Properties/CuarioLibraryNowAPI.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "CuarioLibraryNowAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Publish the project
+RUN dotnet publish "Properties/CuarioLibraryNowAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
+
+# Copy published files
 COPY --from=publish /app/publish .
+
+# Start the app
 ENTRYPOINT ["dotnet", "CuarioLibraryNowAPI.dll"]

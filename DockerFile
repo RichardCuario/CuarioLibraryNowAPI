@@ -6,8 +6,8 @@ ENV ASPNETCORE_URLS=http://+:8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /scr
 COPY ..
-RUN  dotnet restore
-RUN dotnet publish -c Release -o /app/out
+RUN  dotnet restore "CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj"
+RUN dotnet publish "CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj" -c Release -
 
 FROM base AS final
 WORKDIR /app

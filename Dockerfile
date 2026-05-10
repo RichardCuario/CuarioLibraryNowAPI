@@ -3,20 +3,25 @@ WORKDIR /app
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
-# Use SDK image for building
+# Build Stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore
-COPY ["CuarioLibraryNowAPI.csproj", "./"]
-RUN dotnet restore "CuarioLibraryNowAPI.csproj"
+# Copy the project file from the subfolder
+# We use */*.csproj to find it regardless of the folder name
+COPY ["CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj", "CuarioLibraryNowAPI/"]
+RUN dotnet restore "CuarioLibraryNowAPI/CuarioLibraryNowAPI.csproj"
 
-# Copy all files and publish
+# Copy everything and build
 COPY . .
-RUN dotnet publish "CuarioLibraryNowAPI.csproj" -c Release -o /app/out
+WORKDIR "/src/CuarioLibraryNowAPI"
+RUN dotnet build "CuarioLibraryNowAPI.csproj" -c Release -o /app/build
 
-# Final stage
+FROM build AS publish
+RUN dotnet publish "CuarioLibraryNowAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Final Stage
 FROM base AS final
 WORKDIR /app
-COPY --from=build /app/out .
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "CuarioLibraryNowAPI.dll"]
